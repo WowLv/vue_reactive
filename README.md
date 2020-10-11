@@ -52,7 +52,7 @@ for(i in obj) {
 
 结果如下
 
-![06ARAg.png](https://s1.ax1x.com/2020/10/10/06ARAg.png)
+![1.png](./img/1.png)
 
 
 
@@ -143,7 +143,7 @@ function proxyData(vm, target, key) {
 
 这里可以打印看到成功挂载到vm实例上
 
-![0czJ0J.png](https://s1.ax1x.com/2020/10/11/0czJ0J.png)
+![2.png](./img/2.png)
 
 当数据类型时数组或对象时，我们需要额外的操作，所以我们需要对数据进行观察
 
@@ -231,7 +231,7 @@ console.log(vm.info.a.b);
 
 可以看到，嵌套的对象也是响应式的
 
-![0czLhq.png](https://s1.ax1x.com/2020/10/11/0czLhq.png)
+![3.png](./img/3.png)
 
 最后就是对数组类型的劫持，首先我们列出会改变原数组的数组方法
 
@@ -296,7 +296,7 @@ console.log(vm.students.push({
 
 可以看到数组类型也是响应式数据了
 
-![0gCTx0.png](https://s1.ax1x.com/2020/10/11/0gCTx0.png)
+![4.png](./img/4.png)
 
 
 
