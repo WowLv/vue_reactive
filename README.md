@@ -1,4 +1,5 @@
 # vue_reactive
+
 研究vue响应式原理
 
 
@@ -7,7 +8,7 @@
 
 
 
-### 响应式原理
+#### 响应式原理
 
 > 提到响应式原理，我们先来了解一下 `Object.defineProperty`  （在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回此对象）
 
@@ -56,7 +57,7 @@ for(i in obj) {
 
 
 
-### vue 2.0数据劫持
+#### vue 2.0数据劫持
 
 在vue2.0中，其实是将我们的数据进行劫持、然后挂载，再监听，首先我们创建一个vue的实例化对象
 
@@ -320,3 +321,255 @@ Vue.set(vm.items, indexOfItem, newValue)
 // Array.prototype.splice
 vm.items.splice(indexOfItem, 1, newValue)
 ```
+
+
+
+### Vue3.0
+
+#### Proxy
+
+> 与 `defineProperty` 不同的是， `proxy` 是返回一个代理对象，而后者是对对象数据进行劫持操作
+
+```javascript
+let target = {
+    a: 1,
+    b: 2
+}
+let obj = new Proxy(target, {
+    get(target, prop) {
+        return target[prop]
+      //return Reflect.get(target, prop) //推荐, 函数式调用，返回Boolean类型,
+    },
+    set(target, prop, value) {
+        target[prop] = value
+      //Reflect.set(target, prop, value)
+    }
+})
+
+console.log(obj)
+```
+
+
+
+
+
+#### handler的方法
+
++ `handler.getPrototypeOf()  ` :  获取原型
++ `Object.getPrototypeOf()` : 与`Object.prototype`、`obj.__proto__`相似
++ `handler.setPrototypeOf()  `  :  设置原型
++ `Object.setPrototypeOf()`
++ `handler.isExtensible()` : 获取对象可扩展性
++ `Object.isExtensible()` ： 判断可扩展性
++ `handler.preventExtensions()` : 禁止扩展属性
+  + `Object.preventExtensions()`
++ `handler.getOwnPropertyDescriptor()`  : 获取自有属性
++ `Object.getOwnPropertyDescriptor()` : 获取对象自有属性，原型链上的不可获取
++ `handler.ownKeys()` : 获取自有属性名合集
++ `Object.getOwnPropertyNames()` 
+  + `Object.getOwnPropertySymbols()`
++ `[[DefineOwnProperty]]` : 拦截对象操作
+
+  + `Object.defineProperty()` : 对象拦截操作
+  + `Object.defineProperties()` : 多对象拦截操作
++ `handler.has()` : `in` 操作符
++ `handler.get()` : 获取属性
++ `handler.set()` : 设置属性
++ `handler.deleteProperty()` : 删除属性, `delete` 操作符
++ `handler.apply()` : 函数调用操作，`function test() {}  test()`
++ `handler.construct()` :  `new` 操作符，` function Test() {}  new Test()`
+
+
+
+#### Proxy实现
+
+> 在代理对象中对方法进行重写，再返回
+
+```javascript
+function MyProxy(target, handler) {
+    //深拷贝
+    function deepClone(org, tar) {
+        var tar = tar || {},
+            toStr = Object.prototype.toString,
+            arrType = '[object Array]'
+        for(var key in org) {
+            if(org.hasOwnProperty(key)) {
+                if(typeof(org[key]) === 'object' && org[key] !== null) {
+                    tar[key] = toStr.call(org[key]) === arrType ? [] : {};
+                    deepClone(org[key], tar[key])
+                }else {
+                    tar[key] = org[key]
+                }     
+            }
+        }
+        return tar
+    }
+
+    var _target = deepClone(target)
+    Object.keys(_target).forEach(key => {
+        Object.defineProperty(_target, key, {
+            get() {
+                return handler.get && handler.get(target, key)
+            },
+            set(newVal) {
+                handler.set && handler.set(target, key, newVal)
+            }
+        })
+    })
+    return _target
+}
+
+//进行一波测试
+var target = {
+    a: 1,
+    b: 2
+}
+let obj = new MyProxy(target, {
+    get(target, prop) {
+        return `get ${target[prop]}`
+    },
+    set(target, prop, value) {
+        target[prop] = value
+        console.log(`set ${target[prop]}`)
+    }
+})
+console.log(obj.a)
+obj.b = 3
+console.log(obj.b)
+
+/*******result********/
+//get 1
+//set 3
+//get 3
+/*********************/
+```
+
+
+
+#### vue3.0 数据代理
+
+首先，老样子，`webpack` 构造一下项目，vue3.0是以一个个单独包使用，也就是所谓的`Composition API` ，可以看到源码中大量的`export` 操作，这里我们下载`@vue/reactivity` 来进行分析
+
+```js
+import { reactive } from '@vue/reactivity'
+
+const person = reactive({
+    name: 'lv',
+    age: '22',
+    info: {
+        job: 'web前端',
+        idol: [
+            {
+                id: 1,
+                name: '赵露思'
+            },
+            {
+                id: 2,
+                name: '欧阳娜娜'
+            }
+        ]
+    },
+    hobby: ['music', 'basketball']
+})
+
+console.log(person)
+```
+
+可以看到，vue3.0就是用`Proxy` 来代理数据的
+
+![reactive-api](./img/5.png)
+
+那让我们自己来试试，新建一个vue3文件夹，在底下新建`reactive.js` 和 `mutableHandler.js` ，然后我们也学着vue3新建一个shared文件，存在依赖和功能函数
+
+reactive.js
+
+```js
+import { isObject } from '../shared/utils'
+import { mutableHandler } from './mutableHandler'
+
+function reactive(target) {
+    return createReactiveObject(target, mutableHandler);
+}
+
+function createReactiveObject(target, baseHandler) {
+    if(!isObject(target)) {
+        return target
+    }
+
+    const observer = new Proxy(target, baseHandler);
+    return observer
+}
+
+export {
+    reactive
+}
+
+```
+
+mutableHandler.js
+
+这里还用到了`Reflect` : 是一个内置的对象，它提供拦截 JavaScript 操作的方法。这些方法与`proxy handler` 的方法相同。`Reflect`不是一个函数对象，里面都是静态函数，因此它是不可构造的
+
+![Reflect](./img/6.png)
+
+获取时需要判断值是否为对象再进行递归，而获取的时候我们用`hasOwnProperty` 方法进行判断是增加还是修改，这样我们就完成了基本的`Proxy` 的`get()` 和 `set()` 重写完成响应式，当然还有很多代理操作没有写上去，来日方长，咱慢慢研究
+
+```js
+import { isObject, hasOwnProperty, isEqual } from '../shared/utils'
+import { reactive } from './reactive'
+
+const get = createGetter(),
+      set = createSetter()
+
+function createGetter() {
+    return function get(target, key, receiver) {
+        const res = Reflect.get(target, key, receiver)
+        console.log(`响应式获取 ${target[key]}`)
+        // console.log(res)
+        if(isObject(res)) {
+           return reactive(res)
+        }
+        return res
+    }
+}
+
+function createSetter() {
+    return function set(target, key, value, receiver) {
+        const isKeyExist = hasOwnProperty(target, key),
+              oldValue = target[key],
+              res = Reflect.set(target, key, value, receiver) //boolean
+
+        if(!isKeyExist) {
+            console.log(`响应式新增 ${key} = ${target[key]}`)
+        }else if(!isEqual(value, oldValue)) {
+            console.log(`响应式修改 ${key} = ${target[key]}`)
+        }
+        
+        return res
+    }
+}
+
+const mutableHandler = {
+    get,
+    set
+}
+
+export {
+    mutableHandler
+}
+```
+
+测试一波
+
+```js
+person.name
+person.info.idol.push({
+    id: 3,
+    name: 'Even You'
+})
+person.age = 23
+```
+
+![proxy-test](./img/7.png)
+
+nice~

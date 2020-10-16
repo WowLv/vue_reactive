@@ -1,0 +1,19 @@
+{
+  "name": "vue3.0-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack-dev-server",
+    "build": "webpack"
+  },
+  "author": "lv",
+  "license": "ISC",
+  "devDependencies": {
+    "@vue/reactivity": "^3.0.1",
+    "html-webpack-plugin": "^4.5.0",
+    "webpack": "^4.17.1",
+    "webpack-cli": "^3.3.9",
+    "webpack-dev-server": "^3.8.2"
+  }
+}
