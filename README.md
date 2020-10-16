@@ -53,7 +53,7 @@ for(i in obj) {
 
 结果如下
 
-![1.png](./img/1.png)
+![1.png](https://github.com/WowLv/vue_reactive/raw/master/img/1.png)
 
 
 
@@ -144,7 +144,7 @@ function proxyData(vm, target, key) {
 
 这里可以打印看到成功挂载到vm实例上
 
-![2.png](./img/2.png)
+![2.png](https://github.com/WowLv/vue_reactive/raw/master/img/2.png)
 
 当数据类型时数组或对象时，我们需要额外的操作，所以我们需要对数据进行观察
 
@@ -232,7 +232,7 @@ console.log(vm.info.a.b);
 
 可以看到，嵌套的对象也是响应式的
 
-![3.png](./img/3.png)
+![3.png](https://github.com/WowLv/vue_reactive/raw/master/img/3.png)
 
 最后就是对数组类型的劫持，首先我们列出会改变原数组的数组方法
 
@@ -297,7 +297,7 @@ console.log(vm.students.push({
 
 可以看到数组类型也是响应式数据了
 
-![4.png](./img/4.png)
+![4.png](https://github.com/WowLv/vue_reactive/raw/master/img/4.png)
 
 
 
@@ -477,7 +477,7 @@ console.log(person)
 
 可以看到，vue3.0就是用`Proxy` 来代理数据的
 
-![reactive-api](./img/5.png)
+![reactive-api](https://github.com/WowLv/vue_reactive/raw/master/img/5.png)
 
 那让我们自己来试试，新建一个vue3文件夹，在底下新建`reactive.js` 和 `mutableHandler.js` ，然后我们也学着vue3新建一个shared文件，存在依赖和功能函数
 
@@ -510,7 +510,7 @@ mutableHandler.js
 
 这里还用到了`Reflect` : 是一个内置的对象，它提供拦截 JavaScript 操作的方法。这些方法与`proxy handler` 的方法相同。`Reflect`不是一个函数对象，里面都是静态函数，因此它是不可构造的
 
-![Reflect](./img/6.png)
+![Reflect](https://github.com/WowLv/vue_reactive/raw/master/img/6.png)
 
 获取时需要判断值是否为对象再进行递归，而获取的时候我们用`hasOwnProperty` 方法进行判断是增加还是修改，这样我们就完成了基本的`Proxy` 的`get()` 和 `set()` 重写完成响应式，当然还有很多代理操作没有写上去，来日方长，咱慢慢研究
 
@@ -570,6 +570,6 @@ person.info.idol.push({
 person.age = 23
 ```
 
-![proxy-test](./img/7.png)
+![proxy-test](https://github.com/WowLv/vue_reactive/raw/master/img/7.png)
 
 nice~
